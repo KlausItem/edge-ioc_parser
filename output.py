@@ -17,11 +17,11 @@ from cybox.objects.win_registry_key_object import WinRegistryKey
 #from cybox.objects.domain_name_object import DomainName
 OUTPUT_FORMATS = ('csv', 'json', 'yara', 'autofocus', 'stix')
 
-NAMESPACE = {"url.co.uk" : "namespace"} # Add appropriate namespace here
-set_id_namespace(NAMESPACE) # new ids will be prefixed by "certuk"
+NAMESPACE = {"http://www.cert.gov.uk" : "certuk"}
+set_id_namespace(NAMESPACE)
 
 stix_package = STIXPackage()
-
+add_ind_list = []
 
 ind_ip = Indicator()
 ind_ip.add_indicator_type("IP Watchlist")
@@ -40,9 +40,6 @@ ind_email.add_indicator_type("Malicious E-mail")
 
 ind_registrykey = Indicator()
 ind_registrykey.add_indicator_type("Host Characteristics")
-
-#ind_type = Indicator()
-#ind_type.add_indicator_type("<stix_indicator_type>")
 
 ind_dict = {
     'IP': ind_ip,
@@ -86,11 +83,17 @@ class OutputHandler(object):
         print("[ERROR] %s" % (exception))
 
 class OutputHandler_stix(OutputHandler):
+    # Add all entities to stix indicator files (note: must collate objects before printing - unlike other formats!)
+    # - It is noted that this isn't a very stix-ish way of doing things
+    # - Expect an analyst to go through the output and re-link associated iocs where necessary
+    # - eg: Email addresses are creted as a list of email address objects, should be re-built to email objects if other relevant indicators (such as file attachements) exist
     global stix_package
     global ind_dict
+    global add_ind_list
     def print_match(self, fpath, page, name, match):
         if name in ind_dict:            
             indicator = ind_dict[name]
+            add_ind_list.append(name)
             indicator.title = fpath
             #===========
             # Add new object handlers here:
@@ -111,12 +114,6 @@ class OutputHandler_stix(OutputHandler):
 
             elif name == 'Registry':
                 new_obj = WinRegistryKey(values=match)
-
-
-
-
-            #elif name == <type_from_parser>:
-                #new_obj = STIX_Object()
             #===========
 
             new_obs = Observable(new_obj)
@@ -124,16 +121,11 @@ class OutputHandler_stix(OutputHandler):
             indicator.add_observable(new_obs)
 
     def print_footer(self, fpath):
-        add_ind_list = []
-        for key in ind_dict:            
-            if ind_dict[key] not in add_ind_list:
-                add_ind_list.append(ind_dict[key])
+        global add_ind_list
+        for key in ind_dict:
+            if key in add_ind_list:
                 stix_package.add_indicator(ind_dict[key])
         print stix_package.to_xml()
-        data = stix_package.to_xml()
-        newstixfile = open("test.xml", "w")
-        newstixfile.write(data)
-        newstixfile.close()
 
 class OutputHandler_csv(OutputHandler):
     def __init__(self):
