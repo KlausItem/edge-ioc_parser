@@ -107,7 +107,7 @@ class OutputHandler_stix(OutputHandler):
                 new_obj = URI(type_=URI.TYPE_DOMAIN, value=match)
 
             elif name == 'Email':
-                new_obj = Address(address_value=match, category=Address.CAT_EMAIL) #Not sure if this is right - should this be using the email_message_object? 
+                new_obj = Address(address_value=match, category=Address.CAT_EMAIL) ## Not sure if this is right - should this be using the email_message_object? 
 
             elif name == 'Registry':
                 new_obj = WinRegistryKey(values=match)
