@@ -43,9 +43,7 @@ ind_registrykey.add_indicator_type("Host Characteristics")
 
 ind_dict = {
     'IP': ind_ip,
-    'MD5': ind_file,
-    'SHA1': ind_file,
-    'SHA256': ind_file,
+    'HASH': ind_file,
 
     'URL': ind_url,
     'Host': ind_domain,
@@ -91,6 +89,11 @@ class OutputHandler_stix(OutputHandler):
     global ind_dict
     global add_ind_list
     def print_match(self, fpath, page, name, match):
+
+        # Resolve all hashes to single HASH reference to avoid repetition
+        if name == 'MD5' or name == 'SHA1' or name == 'SHA256':
+            name = 'HASH'
+
         if name in ind_dict:            
             indicator = ind_dict[name]
             add_ind_list.append(name)
@@ -99,7 +102,7 @@ class OutputHandler_stix(OutputHandler):
             # Add new object handlers here:
             if name == 'IP':
                 new_obj = Address(address_value=match, category=Address.CAT_IPV4)
-            elif name == 'MD5' or name == 'SHA1' or name == 'SHA256':
+            elif name == 'HASH':
                 new_obj = File()                
                 new_obj.add_hash(Hash(match))
 
