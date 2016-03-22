@@ -85,7 +85,7 @@ class OutputHandler_stix(OutputHandler):
         #print name
         
         global ind_dict    
-        print name
+        #print name
         if name == 'IP': 
             #print "IP WATCHLIST: " + str(ipwatchlist)
             if ipwatchlist == 0:
