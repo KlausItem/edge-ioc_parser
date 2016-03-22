@@ -174,7 +174,8 @@ class OutputHandler_stix(OutputHandler):
                 new_obj = Address(address_value=match, category=Address.CAT_EMAIL) #Not sure if this is right - should this be using the email_message_object? 
 
             elif name == 'Registry':
-                new_obj = WinRegistryKey(values=match)
+                new_obj = WinRegistryKey()
+                new_obj.key = match
 
             elif name == 'Filename':  
                 new_obj = File()                
