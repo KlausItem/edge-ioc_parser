@@ -75,6 +75,8 @@ except ImportError:
 
 # Import additional project source files
 import output
+from stix.utils import set_id_namespace
+
 from whitelist import WhiteList
 
 class IOC_Parser(object):
@@ -298,6 +300,8 @@ class IOC_Parser(object):
             self.handler.print_error(path, e)
 
 if __name__ == "__main__":
+    NAMESPACE = {"http://www.cert.gov.uk" : "certuk"} # Add appropriate namespace here
+    set_id_namespace(NAMESPACE) # new ids will be prefixed by "certuk"
     argparser = argparse.ArgumentParser()
     argparser.add_argument('PATH', action='store', help='File/directory/URL to report(s)')
     argparser.add_argument('-p', dest='INI', default=None, help='Pattern file')

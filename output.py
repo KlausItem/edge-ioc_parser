@@ -5,7 +5,7 @@ import json
 import traceback
 
 from stix.core import STIXPackage
-from stix.utils import set_id_namespace
+
 from stix.indicator import Indicator
 from cybox.core import Observable
 from cybox.objects.address_object import Address
@@ -14,19 +14,8 @@ from cybox.common import Hash
 from cybox.objects.uri_object import URI
 from cybox.objects.win_registry_key_object import WinRegistryKey
 
-ipwatchlist = 0
-filehashwatchlist = 0
-urlwatchlist = 0
-domainwatchlist = 0
-malemailist = 0
-hostcharlist = 0
-
-ind_dict = {}
-
 #from cybox.objects.domain_name_object import DomainName
 OUTPUT_FORMATS = ('csv', 'json', 'yara', 'autofocus', 'stix')
-
-
 
 
 def getHandler(output_format):
@@ -39,7 +28,6 @@ def getHandler(output_format):
     handler_class = getattr(sys.modules[__name__], handler_format)
 
     return handler_class()
-
 
 
 class OutputHandler(object):
@@ -57,111 +45,61 @@ class OutputHandler(object):
         print("[ERROR] %s" % (exception))
 
 
-
-
 class OutputHandler_stix(OutputHandler):
-    def print_matc(self, fpath, page, name, match, last = False):        
-        pass
 
-    global stix_package
-    global ind_dict
-    global add_ind_list
+    def __init__(self):
+        self.stix_package = STIXPackage()
+        self.ind_dict = {}
+        self.add_ind_list = []
 
-
-    NAMESPACE = {"http://www.cert.gov.uk" : "certuk"} # Add appropriate namespace here
-    set_id_namespace(NAMESPACE) # new ids will be prefixed by "certuk"
-    stix_package = STIXPackage()
-    add_ind_list = []
-    
-
-    def print_match(self, fpath, page, name, match):   
-        global ipwatchlist
-        global filehashwatchlist
-        global urlwatchlist
-        global domainwatchlist
-        global malemailist
-        global hostcharlist
-
+    def print_match(self, fpath, page, name, match):
         #print name
-        
-        global ind_dict    
-        #print name
-        if name == 'IP': 
-            #print "IP WATCHLIST: " + str(ipwatchlist)
-            if ipwatchlist == 0:
-                #print "ipwatchlist = " + str(ipwatchlist) 
-                ind_ip = Indicator() 
-                ind_ip.add_indicator_type("IP Watchlist") 
-                ind_dict['IP'] = ind_ip
-                ipwatchlist = 1
-        
-        elif name == 'MD5' or name == 'SHA1' or name == 'SHA256':
-            if filehashwatchlist == 0:   
-                ind_file = Indicator()             
-                ind_file.add_indicator_type("File Hash Watchlist") 
-                ind_dict['MD5'] = ind_file
-                ind_dict['SHA1'] = ind_file
-                ind_dict['SHA256'] = ind_file
-                filehashwatchlist = 1
+        if name not in self.ind_dict:
+            if name == 'IP':
+                ind_ip = Indicator()
+                ind_ip.add_indicator_type("IP Watchlist")
+                self.ind_dict['IP'] = ind_ip
 
+            elif name == 'MD5' or name == 'SHA1' or name == 'SHA256' or name == 'Filename' or name == 'Filepath':
+                ind_file = Indicator()
+                ind_file.add_indicator_type("File Hash Watchlist")
+                self.ind_dict['MD5'] = ind_file
+                self.ind_dict['SHA1'] = ind_file
+                self.ind_dict['SHA256'] = ind_file
+                self.ind_dict['Filename'] = ind_file
+                self.ind_dict['Filepath'] = ind_file
 
-
-
-        elif name == 'URL':
-            if urlwatchlist == 0:  
-                ind_url = Indicator()            
+            elif name == 'URL':
+                ind_url = Indicator()
                 ind_url.add_indicator_type("URL Watchlist")
-                ind_dict['URL'] = ind_url
-                urlwatchlist = 1
+                self.ind_dict['URL'] = ind_url
 
-        elif name == 'Host':
-            if domainwatchlist == 0:  
-                ind_domain = Indicator()              
+            elif name == 'Host':
+                ind_domain = Indicator()
                 ind_domain.add_indicator_type("Domain Watchlist")
-                ind_dict['Host'] = ind_domain
-                domainwatchlist = 1
+                self.ind_dict['Host'] = ind_domain
 
-        elif name == 'Email':
-            if malemailist == 0:  
-                ind_email = Indicator()             
+            elif name == 'Email':
+                ind_email = Indicator()
                 ind_email.add_indicator_type("Malicious E-mail")
-                ind_dict['Email'] = ind_email
-                malemailist = 1
+                self.ind_dict['Email'] = ind_email
 
-        elif name == 'Registry':
-            if hostcharlist == 0: 
-                ind_registrykey = Indicator()              
+            elif name == 'Registry':
+                ind_registrykey = Indicator()
                 ind_registrykey.add_indicator_type("Host Characteristics")
-                ind_dict['Registry'] = ind_registrykey
-                hostcharlist = 1
+                self.ind_dict['Registry'] = ind_registrykey
 
-        elif name == 'Filename':
-            if filehashwatchlist == 0 or 'Filename' not in ind_dict: 
-                ind_file = Indicator()               
-                ind_file.add_indicator_type("File Hash Watchlist")
-                ind_dict['Filename'] = ind_file
-                filehashwatchlist = 1
-
-        elif name == 'Filepath':  # Filepath requires filename    
-            if filehashwatchlist == 0 or 'Filepath' not in ind_dict: 
-                ind_file = Indicator()               
-                ind_file.add_indicator_type("File Hash Watchlist")
-                ind_dict['Filepath'] = ind_file
-                filehashwatchlist = 1
-
-
-
-        if name in ind_dict:            
-            indicator = ind_dict[name]
-            indicator.title = fpath            
+        if name in self.ind_dict:
+            indicator = self.ind_dict[name]
+            indicator.title = fpath
             #===========
             # Add new object handlers here:
-            
-            if name == 'IP':                
+
+            if name == 'IP':
                 new_obj = Address(address_value=match, category=Address.CAT_IPV4)
 
             elif name == 'MD5' or name == 'SHA1' or name == 'SHA256':
-                new_obj = File()                
+                new_obj = File()
                 new_obj.add_hash(Hash(match))
 
             elif name == 'URL':
@@ -171,21 +109,20 @@ class OutputHandler_stix(OutputHandler):
                 new_obj = URI(type_=URI.TYPE_DOMAIN, value=match)
 
             elif name == 'Email':
-                new_obj = Address(address_value=match, category=Address.CAT_EMAIL) #Not sure if this is right - should this be using the email_message_object? 
+                new_obj = Address(address_value=match, category=Address.CAT_EMAIL) #Not sure if this is right - should this be using the email_message_object?
 
             elif name == 'Registry':
                 new_obj = WinRegistryKey()
                 new_obj.key = match
 
-            elif name == 'Filename':  
-                new_obj = File()                
+            elif name == 'Filename':
+                new_obj = File()
                 new_obj.file_name = match
 
-            elif name == 'Filepath':  # Filepath requires filename                             
+            elif name == 'Filepath':  # Filepath requires filename
                 new_obj = File()
                 new_obj.file_name = match.rsplit("\\",1)[1] #Splits match (complete filepath) to provide filename
                 new_obj.file_path = match.rsplit("\\",1)[0] #Splits match (complete filepath) to provide filepath
-
 
             #elif name == <type_from_parser>:
                 #new_obj = STIX_Object()
@@ -196,32 +133,15 @@ class OutputHandler_stix(OutputHandler):
             indicator.add_observable(new_obs)
 
     def print_footer(self, fpath):
-        global ind_dict
-        global add_ind_list
         #print "add_ind_list before: " + str(add_ind_list)
 
+        for key in self.ind_dict:
+            if self.ind_dict[key] not in self.add_ind_list:
+                self.add_ind_list.append(self.ind_dict[key])
+                self.stix_package.add_indicator(self.ind_dict[key])
 
-        for key in ind_dict:            
-            if ind_dict[key] not in add_ind_list:
-                add_ind_list.append(ind_dict[key])
-                stix_package.add_indicator(ind_dict[key])
-
-
-
-
-       
         #print stix_package.to_xml()
-        data = stix_package.to_xml()
-        
-
-        scriptpath = os.getcwd()        
-        outputpath = scriptpath + ("/Output/")  #
-
-        head, sep, tail = fpath.partition('.')
-        outputfile = head + ".xml"
-        newstixfile = open(outputpath + outputfile, "w")
-        newstixfile.write(data)
-        newstixfile.close()
+        print self.stix_package.to_xml()
 
 class OutputHandler_csv(OutputHandler):
     def __init__(self):
@@ -264,7 +184,7 @@ class OutputHandler_yara(OutputHandler):
             self.cnt[name] += 1
         else:
             self.cnt[name] = 1
-        
+
         string_id = "$%s%d" % (name, self.cnt[name])
         self.sids.append(string_id)
         string_value = match.replace('\\', '\\\\')
@@ -320,7 +240,7 @@ class OutputHandler_autofocus(OutputHandler):
             auto_focus_query = '{"field":"sample.tasks.connection","operator":"contains","value":\"%s\"},' % (string_value)
         elif name == "CVE":
             return
-        print(auto_focus_query) 
+        print(auto_focus_query)
 
     def print_header(self, fpath):
         rule_name = os.path.splitext(os.path.basename(fpath))[0].translate(self.rule_enc)
