@@ -140,7 +140,6 @@ class OutputHandler_stix(OutputHandler):
                 self.add_ind_list.append(self.ind_dict[key])
                 self.stix_package.add_indicator(self.ind_dict[key])
 
-        #print stix_package.to_xml()
         print self.stix_package.to_xml()
 
 class OutputHandler_csv(OutputHandler):
