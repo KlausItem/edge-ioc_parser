@@ -129,7 +129,7 @@ class OutputHandler_stix(OutputHandler):
             #===========
 
             new_obs = Observable(new_obj)
-            new_obs.title = "Page Ref: " + str(page)
+            new_obs.title = os.path.basename(fpath) + " p" + str(page)
             indicator.add_observable(new_obs)
 
     def print_footer(self, fpath):
