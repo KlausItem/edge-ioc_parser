@@ -61,7 +61,7 @@ class OutputHandler_stix(OutputHandler):
                 self.ind_dict['IP'] = ind_ip
 
             elif name == 'MD5' or name == 'SHA1' or name == 'SHA256' or name == 'Filename' or name == 'Filepath':
-                ind_file = Indicator()
+                ind_file = Indicator(title=fpath)
                 ind_file.add_indicator_type("File Hash Watchlist")
                 self.ind_dict['MD5'] = ind_file
                 self.ind_dict['SHA1'] = ind_file
@@ -70,22 +70,22 @@ class OutputHandler_stix(OutputHandler):
                 self.ind_dict['Filepath'] = ind_file
 
             elif name == 'URL':
-                ind_url = Indicator()
+                ind_url = Indicator(title=fpath)
                 ind_url.add_indicator_type("URL Watchlist")
                 self.ind_dict['URL'] = ind_url
 
             elif name == 'Host':
-                ind_domain = Indicator()
+                ind_domain = Indicator(title=fpath)
                 ind_domain.add_indicator_type("Domain Watchlist")
                 self.ind_dict['Host'] = ind_domain
 
             elif name == 'Email':
-                ind_email = Indicator()
+                ind_email = Indicator(title=fpath)
                 ind_email.add_indicator_type("Malicious E-mail")
                 self.ind_dict['Email'] = ind_email
 
             elif name == 'Registry':
-                ind_registrykey = Indicator()
+                ind_registrykey = Indicator(title=fpath)
                 ind_registrykey.add_indicator_type("Host Characteristics")
                 self.ind_dict['Registry'] = ind_registrykey
 
