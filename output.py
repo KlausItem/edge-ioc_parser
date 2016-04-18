@@ -89,7 +89,7 @@ class OutputHandler_stix(OutputHandler):
                 ind_registrykey.add_indicator_type("Host Characteristics")
                 self.ind_dict['Registry'] = ind_registrykey
 
-        def createFile(self):
+        def create_file(self):
             new_obj = File()
             new_obj.file_name = ""
             new_obj.file_extension = ""
@@ -109,7 +109,7 @@ class OutputHandler_stix(OutputHandler):
                 new_obj = Address(address_value=match, category=Address.CAT_IPV4)
 
             elif name == 'MD5' or name == 'SHA1' or name == 'SHA256':
-                new_obj = createFile()
+                new_obj = create_file()
                 new_obj.add_hash(Hash(match))
 
             elif name == 'URL':
@@ -127,11 +127,11 @@ class OutputHandler_stix(OutputHandler):
                 new_obj.hive = ""
 
             elif name == 'Filename':
-                new_obj = createFile()
+                new_obj = create_file()
                 new_obj.file_name = match
 
             elif name == 'Filepath':  # Filepath requires filename
-                new_obj = createFile()
+                new_obj = create_file()
                 new_obj.file_name = match.rsplit("\\",1)[1] #Splits match (complete filepath) to provide filename
                 new_obj.file_path = match.rsplit("\\",1)[0] #Splits match (complete filepath) to provide filepath
 
