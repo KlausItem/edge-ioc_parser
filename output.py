@@ -89,7 +89,7 @@ class OutputHandler_stix(OutputHandler):
                 ind_registrykey.add_indicator_type("Host Characteristics")
                 self.ind_dict['Registry'] = ind_registrykey
 
-        def create_file(self):
+        def create_file():
             new_obj = File()
             new_obj.file_name = ""
             new_obj.file_extension = ""
