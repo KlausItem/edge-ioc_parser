@@ -14,7 +14,7 @@ from cybox.common import Hash
 from cybox.objects.uri_object import URI
 from cybox.objects.win_registry_key_object import WinRegistryKey
 
-#from cybox.objects.domain_name_object import DomainName
+# from cybox.objects.domain_name_object import DomainName
 OUTPUT_FORMATS = ('csv', 'json', 'yara', 'autofocus', 'stix')
 
 
@@ -31,7 +31,7 @@ def getHandler(output_format):
 
 
 class OutputHandler(object):
-    def print_match(self, fpath, page, name, match, last = False):
+    def print_match(self, fpath, page, name, match, last=False):
         pass
 
     def print_header(self, fpath):
@@ -46,14 +46,13 @@ class OutputHandler(object):
 
 
 class OutputHandler_stix(OutputHandler):
-
     def __init__(self):
         self.stix_package = STIXPackage()
         self.ind_dict = {}
         self.add_ind_list = []
 
     def print_match(self, fpath, page, name, match):
-        #print name
+        # print name
         if name not in self.ind_dict:
             if name == 'IP':
                 ind_ip = Indicator()
@@ -61,7 +60,7 @@ class OutputHandler_stix(OutputHandler):
                 self.ind_dict['IP'] = ind_ip
 
             elif name == 'MD5' or name == 'SHA1' or name == 'SHA256' or name == 'Filename' or name == 'Filepath':
-                ind_file = Indicator(title=fpath)
+                ind_file = Indicator(title=fpath + " (File Hash Watchlist)")
                 ind_file.add_indicator_type("File Hash Watchlist")
                 self.ind_dict['MD5'] = ind_file
                 self.ind_dict['SHA1'] = ind_file
@@ -70,22 +69,22 @@ class OutputHandler_stix(OutputHandler):
                 self.ind_dict['Filepath'] = ind_file
 
             elif name == 'URL':
-                ind_url = Indicator(title=fpath)
+                ind_url = Indicator(title=fpath + " (URL Watchlist)")
                 ind_url.add_indicator_type("URL Watchlist")
                 self.ind_dict['URL'] = ind_url
 
             elif name == 'Host':
-                ind_domain = Indicator(title=fpath)
+                ind_domain = Indicator(title=fpath + " (Domain Watchlist)")
                 ind_domain.add_indicator_type("Domain Watchlist")
                 self.ind_dict['Host'] = ind_domain
 
             elif name == 'Email':
-                ind_email = Indicator(title=fpath)
+                ind_email = Indicator(title=fpath + " (Malicious E-mail)")
                 ind_email.add_indicator_type("Malicious E-mail")
                 self.ind_dict['Email'] = ind_email
 
             elif name == 'Registry':
-                ind_registrykey = Indicator(title=fpath)
+                ind_registrykey = Indicator(title=fpath + " (Host Characteristics)")
                 ind_registrykey.add_indicator_type("Host Characteristics")
                 self.ind_dict['Registry'] = ind_registrykey
 
@@ -102,7 +101,8 @@ class OutputHandler_stix(OutputHandler):
         if name in self.ind_dict:
             indicator = self.ind_dict[name]
             indicator.title = fpath
-            #===========
+
+            # ===========
             # Add new object handlers here:
 
             if name == 'IP':
@@ -119,7 +119,8 @@ class OutputHandler_stix(OutputHandler):
                 new_obj = URI(type_=URI.TYPE_DOMAIN, value=match)
 
             elif name == 'Email':
-                new_obj = Address(address_value=match, category=Address.CAT_EMAIL) #Not sure if this is right - should this be using the email_message_object?
+                new_obj = Address(address_value=match,
+                                  category=Address.CAT_EMAIL)  # Not sure if this is right - should this be using the email_message_object?
 
             elif name == 'Registry':
                 new_obj = WinRegistryKey()
@@ -132,18 +133,18 @@ class OutputHandler_stix(OutputHandler):
 
             elif name == 'Filepath':  # Filepath requires filename
                 new_obj = create_file()
-                new_obj.file_name = match.rsplit("\\",1)[1] #Splits match (complete filepath) to provide filename
-                new_obj.file_path = match.rsplit("\\",1)[0] #Splits match (complete filepath) to provide filepath
+                new_obj.file_name = match.rsplit("\\", 1)[1]  # Splits match (complete filepath) to provide filename
+                new_obj.file_path = match.rsplit("\\", 1)[0]  # Splits match (complete filepath) to provide filepath
 
-            #elif name == <type_from_parser>:
-                #new_obj = STIX_Object()
-            #===========
 
-            new_obs = Observable(new_obj)
+                # elif name == <type_from_parser>:
+                # new_obj = STIX_Object()
+            # ===========
+            new_obs = Observable(new_obj, description="%s on page %d" % (fpath, page))
             indicator.add_observable(new_obs)
 
     def print_footer(self, fpath):
-        #print "add_ind_list before: " + str(add_ind_list)
+        # print "add_ind_list before: " + str(add_ind_list)
 
         for key in self.ind_dict:
             if self.ind_dict[key] not in self.add_ind_list:
@@ -152,9 +153,10 @@ class OutputHandler_stix(OutputHandler):
 
         print self.stix_package.to_xml()
 
+
 class OutputHandler_csv(OutputHandler):
     def __init__(self):
-        self.csv_writer = csv.writer(sys.stdout, delimiter = '\t')
+        self.csv_writer = csv.writer(sys.stdout, delimiter='\t')
 
     def print_match(self, fpath, page, name, match):
         self.csv_writer.writerow((fpath, page, name, match))
@@ -162,13 +164,14 @@ class OutputHandler_csv(OutputHandler):
     def print_error(self, fpath, exception):
         self.csv_writer.writerow((fpath, '0', 'error', exception))
 
+
 class OutputHandler_json(OutputHandler):
     def print_match(self, fpath, page, name, match):
         data = {
-            'path' : fpath,
-            'file' : os.path.basename(fpath),
-            'page' : page,
-            'type' : name,
+            'path': fpath,
+            'file': os.path.basename(fpath),
+            'page': page,
+            'type': name,
             'match': match
         }
 
@@ -176,17 +179,19 @@ class OutputHandler_json(OutputHandler):
 
     def print_error(self, fpath, exception):
         data = {
-            'path'      : fpath,
-            'file'      : os.path.basename(fpath),
-            'type'      : 'error',
-            'exception' : exception
+            'path': fpath,
+            'file': os.path.basename(fpath),
+            'type': 'error',
+            'exception': exception
         }
 
         print(json.dumps(data))
 
+
 class OutputHandler_yara(OutputHandler):
     def __init__(self):
-        self.rule_enc = ''.join(chr(c) if chr(c).isupper() or chr(c).islower() or chr(c).isdigit() else '_' for c in range(256))
+        self.rule_enc = ''.join(
+                chr(c) if chr(c).isupper() or chr(c).islower() or chr(c).isdigit() else '_' for c in range(256))
 
     def print_match(self, fpath, page, name, match):
         if name in self.cnt:
@@ -216,9 +221,11 @@ class OutputHandler_yara(OutputHandler):
         print("\t\t" + cond)
         print("}")
 
+
 class OutputHandler_autofocus(OutputHandler):
     def __init__(self):
-        self.rule_enc = ''.join(chr(c) if chr(c).isupper() or chr(c).islower() or chr(c).isdigit() else '_' for c in range(256))
+        self.rule_enc = ''.join(
+                chr(c) if chr(c).isupper() or chr(c).islower() or chr(c).isdigit() else '_' for c in range(256))
 
     def print_match(self, fpath, page, name, match):
         string_value = match.replace('hxxp', 'http').replace('\\', '\\\\')
@@ -230,23 +237,25 @@ class OutputHandler_autofocus(OutputHandler):
         elif name == "SHA256":
             auto_focus_query = '{"field":"sample.sha256","operator":"is","value":\"%s\"},' % (string_value)
         elif name == "URL":
-            auto_focus_query = '{"field":"sample.tasks.connection","operator":"contains","value":\"%s\"},' % (string_value)
+            auto_focus_query = '{"field":"sample.tasks.connection","operator":"contains","value":\"%s\"},' % (
+            string_value)
         elif name == "Host":
             auto_focus_query = '{"field":"sample.tasks.dns","operator":"contains","value":\"%s\"},' % (string_value)
         elif name == "Registry":
-            #auto_focus_query = '{"field":"sample.tasks.registry","operator":"is","value":\"%s\"},' % (string_value)
+            # auto_focus_query = '{"field":"sample.tasks.registry","operator":"is","value":\"%s\"},' % (string_value)
             return
         elif name == "Filepath":
-            #auto_focus_query = '{"field":"sample.tasks.file","operator":"is","value":\"%s\"},' % (string_value)
+            # auto_focus_query = '{"field":"sample.tasks.file","operator":"is","value":\"%s\"},' % (string_value)
             return
         elif name == "Filename":
-            #auto_focus_query = '{"field":"alias.filename","operator":"is","value":\"%s\"},' % (string_value)
+            # auto_focus_query = '{"field":"alias.filename","operator":"is","value":\"%s\"},' % (string_value)
             return
         elif name == "Email":
-            #auto_focus_query = '{"field":"alias.email","operator":"is","value":\"%s\"},' % (string_value)
+            # auto_focus_query = '{"field":"alias.email","operator":"is","value":\"%s\"},' % (string_value)
             return
         elif name == "IP":
-            auto_focus_query = '{"field":"sample.tasks.connection","operator":"contains","value":\"%s\"},' % (string_value)
+            auto_focus_query = '{"field":"sample.tasks.connection","operator":"contains","value":\"%s\"},' % (
+            string_value)
         elif name == "CVE":
             return
         print(auto_focus_query)
@@ -257,10 +266,6 @@ class OutputHandler_autofocus(OutputHandler):
         print("AutoFocus Search for: %s" % (rule_name))
         print('{"operator":"Any","children":[')
 
-
     def print_footer(self, fpath):
         rule_name = os.path.splitext(os.path.basename(fpath))[0].translate(self.rule_enc)
         print('{"field":"sample.tag","operator":"is in the list","value":[\"%s\"]}]}' % (rule_name))
-
-
-
