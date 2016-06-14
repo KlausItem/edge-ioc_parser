@@ -53,6 +53,14 @@ class OutputHandler_stix(OutputHandler):
 
     def print_match(self, fpath, page, name, match):
         # print name
+
+        #In lib cybox.utils.__init__.normalize_to_xml an attempt is made to create
+        #a unicode object from this match str. If the str is utf-8 encoded, this will fall over.
+        #convert to a unicode object by decoding with utf-8 to handle both ascii & utf-8 encoded strings.
+
+        if isinstance(match, str):
+            match = unicode(match, encoding='utf-8')
+
         if name not in self.ind_dict:
             if name == 'IP':
                 ind_ip = Indicator()
