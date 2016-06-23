@@ -63,7 +63,7 @@ class OutputHandler_stix(OutputHandler):
 
         if name not in self.ind_dict:
             if name == 'IP':
-                ind_ip = Indicator()
+                ind_ip = Indicator(title=fpath + " IP Watchlist")
                 ind_ip.add_indicator_type("IP Watchlist")
                 self.ind_dict['IP'] = ind_ip
 
