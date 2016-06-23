@@ -108,7 +108,6 @@ class OutputHandler_stix(OutputHandler):
 
         if name in self.ind_dict:
             indicator = self.ind_dict[name]
-            indicator.title = fpath
 
             # ===========
             # Add new object handlers here:
