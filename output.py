@@ -147,7 +147,7 @@ class OutputHandler_stix(OutputHandler):
                 # elif name == <type_from_parser>:
                 # new_obj = STIX_Object()
             # ===========
-            new_obs = Observable(new_obj, name=match)
+            new_obs = Observable(new_obj, title=match)
             indicator.add_observable(new_obs)
 
     def print_footer(self, fpath):
