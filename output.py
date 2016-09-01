@@ -54,9 +54,9 @@ class OutputHandler_stix(OutputHandler):
     def print_match(self, fpath, page, name, match):
         # print name
 
-        #In lib cybox.utils.__init__.normalize_to_xml an attempt is made to create
-        #a unicode object from this match str. If the str is utf-8 encoded, this will fall over.
-        #convert to a unicode object by decoding with utf-8 to handle both ascii & utf-8 encoded strings.
+        # In lib cybox.utils.__init__.normalize_to_xml an attempt is made to create
+        # a unicode object from this match str. If the str is utf-8 encoded, this will fall over.
+        # convert to a unicode object by decoding with utf-8 to handle both ascii & utf-8 encoded strings.
 
         if isinstance(match, str):
             match = unicode(match, encoding='utf-8')
@@ -147,7 +147,7 @@ class OutputHandler_stix(OutputHandler):
                 # elif name == <type_from_parser>:
                 # new_obj = STIX_Object()
             # ===========
-            new_obs = Observable(new_obj, description="%s on page %d" % (fpath, page))
+            new_obs = Observable(new_obj, name=match)
             indicator.add_observable(new_obs)
 
     def print_footer(self, fpath):
@@ -198,7 +198,7 @@ class OutputHandler_json(OutputHandler):
 class OutputHandler_yara(OutputHandler):
     def __init__(self):
         self.rule_enc = ''.join(
-                chr(c) if chr(c).isupper() or chr(c).islower() or chr(c).isdigit() else '_' for c in range(256))
+            chr(c) if chr(c).isupper() or chr(c).islower() or chr(c).isdigit() else '_' for c in range(256))
 
     def print_match(self, fpath, page, name, match):
         if name in self.cnt:
@@ -232,7 +232,7 @@ class OutputHandler_yara(OutputHandler):
 class OutputHandler_autofocus(OutputHandler):
     def __init__(self):
         self.rule_enc = ''.join(
-                chr(c) if chr(c).isupper() or chr(c).islower() or chr(c).isdigit() else '_' for c in range(256))
+            chr(c) if chr(c).isupper() or chr(c).islower() or chr(c).isdigit() else '_' for c in range(256))
 
     def print_match(self, fpath, page, name, match):
         string_value = match.replace('hxxp', 'http').replace('\\', '\\\\')
@@ -245,7 +245,7 @@ class OutputHandler_autofocus(OutputHandler):
             auto_focus_query = '{"field":"sample.sha256","operator":"is","value":\"%s\"},' % (string_value)
         elif name == "URL":
             auto_focus_query = '{"field":"sample.tasks.connection","operator":"contains","value":\"%s\"},' % (
-            string_value)
+                string_value)
         elif name == "Host":
             auto_focus_query = '{"field":"sample.tasks.dns","operator":"contains","value":\"%s\"},' % (string_value)
         elif name == "Registry":
@@ -262,7 +262,7 @@ class OutputHandler_autofocus(OutputHandler):
             return
         elif name == "IP":
             auto_focus_query = '{"field":"sample.tasks.connection","operator":"contains","value":\"%s\"},' % (
-            string_value)
+                string_value)
         elif name == "CVE":
             return
         print(auto_focus_query)
