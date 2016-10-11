@@ -7,7 +7,7 @@ import traceback
 from stix.core import STIXPackage
 
 from stix.indicator import Indicator
-from cybox.core import Observable
+from cybox.core import Observable, ObservableComposition
 from cybox.objects.address_object import Address
 from cybox.objects.file_object import File
 from cybox.common import Hash
@@ -17,6 +17,24 @@ from cybox.objects.win_registry_key_object import WinRegistryKey
 # from cybox.objects.domain_name_object import DomainName
 OUTPUT_FORMATS = ('csv', 'json', 'yara', 'autofocus', 'stix')
 
+from edge.idgen import make_stix_id, get_id_namespace, get_id_namespace_alias
+
+def patched_merge_observables(self, observables):
+    observable_composition = ObservableComposition()
+    observable_composition.operator = self.observable_composition_operator
+
+    for observable_ in observables:
+        observable_composition.add(observable_)
+
+    root_observable = Observable(id_=make_id("Observable"))
+    root_observable.observable_composition = observable_composition
+
+    return root_observable
+
+Indicator._merge_observables = patched_merge_observables
+
+def make_id(prefix):
+    return make_stix_id(prefix)["id"]
 
 def getHandler(output_format):
     output_format = output_format.lower()
@@ -47,7 +65,7 @@ class OutputHandler(object):
 
 class OutputHandler_stix(OutputHandler):
     def __init__(self):
-        self.stix_package = STIXPackage()
+        self.stix_package = STIXPackage(id_=make_id("Package"))
         self.ind_dict = {}
         self.add_ind_list = []
 
@@ -63,12 +81,12 @@ class OutputHandler_stix(OutputHandler):
 
         if name not in self.ind_dict:
             if name == 'IP':
-                ind_ip = Indicator(title=fpath + " IP Watchlist")
+                ind_ip = Indicator(title=fpath + " IP Watchlist", id_=make_id("indicator"))
                 ind_ip.add_indicator_type("IP Watchlist")
                 self.ind_dict['IP'] = ind_ip
 
             elif name == 'MD5' or name == 'SHA1' or name == 'SHA256' or name == 'Filename' or name == 'Filepath':
-                ind_file = Indicator(title=fpath + " (File Hash Watchlist)")
+                ind_file = Indicator(title=fpath + " (File Hash Watchlist)", id_=make_id("indicator"))
                 ind_file.add_indicator_type("File Hash Watchlist")
                 self.ind_dict['MD5'] = ind_file
                 self.ind_dict['SHA1'] = ind_file
@@ -77,22 +95,22 @@ class OutputHandler_stix(OutputHandler):
                 self.ind_dict['Filepath'] = ind_file
 
             elif name == 'URL':
-                ind_url = Indicator(title=fpath + " (URL Watchlist)")
+                ind_url = Indicator(title=fpath + " (URL Watchlist)", id_=make_id("indicator"))
                 ind_url.add_indicator_type("URL Watchlist")
                 self.ind_dict['URL'] = ind_url
 
             elif name == 'Host':
-                ind_domain = Indicator(title=fpath + " (Domain Watchlist)")
+                ind_domain = Indicator(title=fpath + " (Domain Watchlist)", id_=make_id("indicator"))
                 ind_domain.add_indicator_type("Domain Watchlist")
                 self.ind_dict['Host'] = ind_domain
 
             elif name == 'Email':
-                ind_email = Indicator(title=fpath + " (Malicious E-mail)")
+                ind_email = Indicator(title=fpath + " (Malicious E-mail)", id_=make_id("indicator"))
                 ind_email.add_indicator_type("Malicious E-mail")
                 self.ind_dict['Email'] = ind_email
 
             elif name == 'Registry':
-                ind_registrykey = Indicator(title=fpath + " (Host Characteristics)")
+                ind_registrykey = Indicator(title=fpath + " (Host Characteristics)", id_=make_id("indicator"))
                 ind_registrykey.add_indicator_type("Host Characteristics")
                 self.ind_dict['Registry'] = ind_registrykey
 
@@ -147,7 +165,7 @@ class OutputHandler_stix(OutputHandler):
                 # elif name == <type_from_parser>:
                 # new_obj = STIX_Object()
             # ===========
-            new_obs = Observable(new_obj, title=match)
+            new_obs = Observable(new_obj, title=match, id_=make_id("Observable"))
             indicator.add_observable(new_obs)
 
     def print_footer(self, fpath):
@@ -158,7 +176,7 @@ class OutputHandler_stix(OutputHandler):
                 self.add_ind_list.append(self.ind_dict[key])
                 self.stix_package.add_indicator(self.ind_dict[key])
 
-        print self.stix_package.to_xml()
+        print self.stix_package.to_xml(ns_dict={get_id_namespace() : get_id_namespace_alias()})
 
 
 class OutputHandler_csv(OutputHandler):
