@@ -15,8 +15,12 @@ One of the following PDF parsing libraries:
 * [PyPDF2](https://github.com/mstamy2/PyPDF2) - *pip install pypdf2*
 * [pdfminer](https://github.com/euske/pdfminer) - *pip install pdfminer*
 
+Soltra-Edge:
+* The edge2.9 branch of IOC Parser will only work with an installation of Soltra Edge 2.9.*.
+
 For HTML parsing support:
 * [BeautifulSoup](http://www.crummy.com/software/BeautifulSoup/) - *pip install beautifulsoup4*
 
 For HTTP(S) support:
 * [requests](http://docs.python-requests.org/en/latest/) - *pip install requests*
+
